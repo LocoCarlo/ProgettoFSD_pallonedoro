@@ -1,0 +1,519 @@
+---
+title: "Progetto Fondamenti di Scienza dei Dati"
+author: "Carlo Nordio"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(plotly)
+library(graphics)
+library(tidyverse)
+library(ggrepel)
+
+pallone = read_csv("pallonedoro.csv",show_col_types = FALSE)
+oro = read_csv("ballon-d-or.csv",show_col_types = FALSE)
+
+candidati = read_csv("candidati2023.csv",show_col_types = FALSE)
+
+```
+
+```{css, echo=FALSE}
+slides > slide{
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  background:white;
+}
+
+
+h2{
+    font-size: 35px;
+    line-height: 65px;
+    letter-spacing: -2px;
+    position: relative;
+    color: #797979;
+    left: -60px;
+    background-color: #f9f9f9;
+    padding: 8px;
+    width: 112.5%;
+    border-left: 5px solid #ccc;
+}
+```
+
+## Da cosa nasce il topic del progetto
+
+Il progetto riguardo al Pallone d'oro nasce per:
+
+-   curiosità personale
+-   interesse nel calcio
+-   fare bella figura coi miei amici quando ne parleremo
+
+Ragioni che hanno portato alla fomulazione delle seguenti domande:
+
+-   Quale ruolo è più propenso a vincerlo e perchè?
+-   Quali campionati hanno avuto più vincitori del premio?
+-   Si può prevedere il prossimo Pallone d'oro?
+-   Che legame ha avuto l'Italia nel tempo con questo premio?
+
+## Dataset utilizzati
+
+Per sviluppare il progetto sono stati utilizzati i seguenti dataset:
+
+-  <a href="https://www.kaggle.com/code/carlonordio/ballon-d-or-data-analysis/input"> ballon-d-or.csv </a>
+-  pallonedoro.csv (creato da me)
+-  candidati2023.csv (creato da me)
+
+Prelevati dalle seguenti fonti:
+
+-   Kaggle
+-   (dati extra aggiunti da me dopo ricerche su <a href="https://www.transfermarkt.it/">Transfermarkt</a>)
+
+*ringraziamento speciale agli sviluppatori di Transfermarkt
+
+## I criteri per l'assegnazione del premio sono descritti nell'articolo 10 del relativo regolamento
+
+-     insieme delle prestazioni individuali e di squadra durante 
+      l'anno preso in considerazione;
+-     valore del giocatore (talento e fair play);
+-     carriera;
+-     personalità, carisma.
+
+La mia analisi quindi si concentrerà sui fattori che statisticamente hanno caratterizzato tutti i vincitori
+
+## Quale ruolo è più propenso a vincerlo e perchè?
+
+Osserviamo prima il numero di nomination sul podio per ruolo
+
+```{r  figures-side,fig.align='center'}
+
+#portieri
+nominaionPortieri = 
+  oro %>% 
+  filter(ruolo=="P")%>%
+  select(ruolo)
+po = as.integer(count(nominaionPortieri))
+
+#difensori
+nominaionDifensori = 
+  oro %>% 
+  filter(ruolo=="D")%>%
+  select(ruolo)
+di = as.integer(count(nominaionDifensori))
+
+#centrocampisti
+nominaionCentrocampisti = 
+  oro %>% 
+  filter(ruolo=="C")%>%
+  select(ruolo)
+ce = as.integer(count(nominaionCentrocampisti))
+
+#attaccanti
+nominaionAttaccanti = 
+  oro %>% 
+  filter(ruolo=="A")%>%
+  select(ruolo)
+at = as.integer(count(nominaionAttaccanti))
+
+Ruoli = c("P", "D", "C", "A")
+
+pos = c(po, di, ce, at)
+
+nomPerRuolo = data.frame(Ruoli=Ruoli, pos = pos)
+
+Rolegraph <- barplot( height = nomPerRuolo$pos, border = F,main="Posizioni sul podio (top 3) per ruolo", 
+                     names.arg=Ruoli,
+                     ylab="Nomination",xlab="Ruolo",
+                     col= c("grey","grey","grey","green"))
+
+text(Rolegraph, ifelse(Ruoli == "A", pos-9, pos+9), paste(pos))
+
+```
+
+Ora ci concentriamo sugli effettivi vincitori del premio
+
+```{r  figures2-side,fig.align='center'}
+
+#portieri
+premiPortieri = 
+  oro %>% 
+  filter(ruolo=="P" & posizione=="1st")%>%
+  select(ruolo)
+p = as.integer(count(premiPortieri))
+
+#difensori
+premiDifensori = 
+  oro %>% 
+  filter(ruolo=="D" & posizione=="1st")%>%
+  select(ruolo)
+d = as.integer(count(premiDifensori))
+
+#centrocampisti
+premiCentrocampisti = 
+  oro %>% 
+  filter(ruolo=="C" & posizione=="1st")%>%
+  select(ruolo)
+c = as.integer(count(premiCentrocampisti))
+
+#attaccanti
+premiAttaccanti = 
+  oro %>% 
+  filter(ruolo=="A" & posizione=="1st")%>%
+  select(ruolo)
+a = as.integer(count(premiAttaccanti))
+
+
+Role = c("P", "D", "C", "A")
+
+po = c(p, d, c, a)
+
+PremiPerRuolo = data.frame(Role=Role, po = po)
+
+Rolegraph <- barplot( height = PremiPerRuolo$po, border = F, main="Numero di premi per ruolo", 
+                      names.arg=Role,
+                      ylab="Palloni d'oro",xlab="Ruolo",
+                      col= c("grey","grey","grey","green"))
+
+
+text(Rolegraph, ifelse(Role == "A", po-9, po+5), paste( po))
+
+```
+Risulta evidente quindi, anche come previsto, che il ruolo di attaccante sia quello prediletto per vincere un Pallone d'Oro
+
+```{r boxplot,fig.align='center'}
+
+gioc = 
+  pallone %>% 
+  filter(between(anno,2008,2022))%>%
+  select(anno, giocatore, gol, ruolo)
+
+ggplot(data = gioc, mapping = aes(x = anno, y = gol)) +
+  geom_point(mapping = aes(color = ruolo), size = 3) +  # Imposta size a un valore più grande
+  geom_smooth(se = FALSE)
+
+```
+Qui possiamo vedere il trend di Gol fatti negli ultimi 15 anni dai vincitori (l'unico che si discosta dal trend è il solo giocatore di ruolo centrocampista)
+
+## Quali campionati hanno avuto più vincitori del premio?
+
+```{r cat,fig.align='center'}
+
+#Premier
+prem = 
+  oro %>% 
+  filter(campionato=="Premier League")%>%
+  select(campionato)
+en = as.integer(count(prem))
+
+#La Liga
+lig = 
+  oro %>% 
+  filter(campionato=="La Liga")%>%
+  select(campionato)
+sp = as.integer(count(lig))
+
+#Serie A
+ser = 
+  oro %>% 
+  filter(campionato=="Serie A")%>%
+  select(campionato)
+it = as.integer(count(ser))
+
+#Bundesliga
+bund = 
+  oro %>% 
+  filter(campionato=="Bundesliga")%>%
+  select(campionato)
+ge = as.integer(count(bund))
+
+#Ligue 1
+ligu = 
+  oro %>% 
+  filter(campionato=="Ligue 1")%>%
+  select(campionato)
+fr = as.integer(count(ligu))
+
+#altro
+altr = 
+  oro %>% 
+  filter(campionato=="altro")%>%
+  select(campionato)
+al = as.integer(count(altr))
+
+valori <- c(al, ge, sp, fr, en, it)
+label <- c(al, ge, sp, fr, en, it)
+cols <- c("#ff69b4","#1e90ff","#48d1cc","#32cd32", "#daa520","#f08080")
+pie(valori, labels=label, main="nomination per campionati", col = cols)
+
+legend("topright", legend = c("Altro","Bundesliga","La Liga","Ligue 1","Premier League","Serie A"), 
+       fill = c("#ff69b4","#1e90ff","#48d1cc","#32cd32", "#daa520","#f08080"),border="white",
+       bty = "n", pt.cex = 2,  horiz = FALSE)
+
+```
+Analizzando le nomination ALL TIME al premio dei TOP 5 campionati, quello spagnolo (La Liga)
+risulta essere il più coinvolto, seguito dalla Serie A
+
+```{r  figures3-side,fig.align='center'}
+
+#Premier
+premier = 
+  oro %>% 
+  filter(campionato=="Premier League" & posizione=="1st")%>%
+  select(campionato)
+ing = as.integer(count(premier))
+
+#La Liga
+liga = 
+  oro %>% 
+  filter(campionato=="La Liga" & posizione=="1st")%>%
+  select(campionato)
+spa = as.integer(count(liga))
+
+#Serie A
+serie = 
+  oro %>% 
+  filter(campionato=="Serie A" & posizione=="1st")%>%
+  select(campionato)
+ita = as.integer(count(serie))
+
+#Bundesliga
+bundes = 
+  oro %>% 
+  filter(campionato=="Bundesliga" & posizione=="1st")%>%
+  select(campionato)
+ger = as.integer(count(bundes))
+
+#Ligue 1
+ligue = 
+  oro %>% 
+  filter(campionato=="Ligue 1" & posizione=="1st")%>%
+  select(campionato)
+fra = as.integer(count(ligue))
+
+#altro
+altro = 
+  oro %>% 
+  filter(campionato=="altro" & posizione=="1st")%>%
+  select(campionato)
+alt = as.integer(count(altro))
+
+camp = c("La Liga", "Serie A", "Bundesliga","Premier", "Ligue 1", "Altri campionati")
+
+vin = c(spa, ita, ger, ing, fra, alt)
+
+PremiPerCamp = data.frame(camp=camp, vin = vin)
+
+Rolegraph <- barplot( height = PremiPerCamp$vin, border = F,main="Vincitori per campionato ALL TIME", 
+                      names.arg=camp,
+                      ylab="Palloni d'oro",xlab="Campionato",
+                      col= c("green","#797979","#797979","#797979","#797979","grey"))
+
+legend("topright", legend = c("Altri: Eredivise, Liga Nos, campionato URSS"), 
+       col = c("grey"), 
+       bty = "n", pch=20 , pt.cex = 2, cex = 0.8, horiz = FALSE, inset = c(0.05, 0.05))
+
+text(Rolegraph, ifelse(camp == "La Liga", vin-2, vin+1), paste(vin))
+
+ggplot(data = oro) +
+  geom_bar(mapping = aes(x = anno>1990, fill = campionato), position = "dodge")
+
+```
+Qui abbiamo un confronto tra le nomination dei vari campionati prima e dopo degli anni '90. 
+Possiamo notare diversi cambiamenti
+
+
+## Che legame ha avuto l'Italia nel tempo con questo premio?
+
+```{r  figures4-side,fig.align='center'}
+
+pdsa <- oro %>%
+  filter(campionato == "Serie A") %>%
+  select(anno, campionato, posizione)
+
+conteggio <- count(pdsa, anno)
+
+anni <- seq(min(oro$anno), max(oro$anno), 1)
+
+numVincitori <- data.frame(conteggio)
+
+numVincitori <- merge(numVincitori, data.frame(anno = anni), by = "anno", all = TRUE)
+
+condizione <- unique(pdsa$anno[pdsa$posizione == "1st"])
+
+condnome <- oro$posizione == "1st" & oro$campionato == "Serie A"
+
+barplot(numVincitori$n, border = "black", col = ifelse(numVincitori$anno %in% condizione, "green", "white"),
+        main = "Nomination e vincitori in Serie A", las = 2,
+        names.arg = numVincitori$anno,
+        ylab = "nomination", xlab = "anno", space = 0.5)
+
+
+print(oro$giocatore[condnome])
+
+
+```
+```{r  figures5-side,fig.align='center'}
+
+pdita <- oro %>%
+  filter(nazionale == "Italy") %>%
+  select(anno, nazionale, posizione)
+
+conteggio <- count(pdita, anno)
+
+anni <- seq(min(oro$anno), max(oro$anno), 1)
+
+numVincitori <- data.frame(conteggio)
+
+numVincitori <- merge(numVincitori, data.frame(anno = anni), by = "anno", all = TRUE)
+
+condizione <- unique(pdita$anno[pdita$posizione == "1st"])
+
+condnome <- oro$posizione == "1st" & oro$nazionale == "Italy"
+
+barplot(numVincitori$n, border = "black", col = ifelse(numVincitori$anno %in% condizione, "green", "white"),
+        main = "Nomination e vincitori in Serie A", las = 2,
+        names.arg = numVincitori$anno,
+        ylab = "nomination", xlab = "anno", space = 0.5)
+
+
+print(oro$giocatore[condnome])
+
+```
+```{r  squadre-italia,fig.align='center'}
+
+# Filtro i dati del dataframe "oro" per la campionato "Serie A"
+serie_a_data <- oro[oro$campionato == "Serie A", ]
+
+# Calcolo il numero di volte che ogni squadra appare nel dataframe
+conteggio_squadre <- table(serie_a_data$squadra)
+
+# Estraggo solo le prime tre lettere dei nomi delle squadre
+squadre_abbreviate <- strtrim(names(conteggio_squadre), 3)
+
+# Definisco i colori personalizzati per le barre
+colori <- c("grey", "grey", "grey", "green", "grey")
+
+# Creo il grafico barplot con barre colorate
+barplot(conteggio_squadre, 
+        main = "Nomination per Squadra in Serie A (1956-2022)", 
+        xlab = "nomination", 
+        ylab = "squadra",
+        horiz = TRUE,
+        names.arg = squadre_abbreviate,
+        col = colori[1:length(conteggio_squadre)],
+        xlim = c(0,20))
+
+# Aggiungo le etichette dei numeri relativi sopra ogni barra
+text(x = conteggio_squadre, 
+     y = 1:length(conteggio_squadre), 
+     labels = conteggio_squadre, 
+     pos = 4, 
+     cex = 0.9, 
+     col = "black")
+
+```
+
+```{r  squadre-ita-1,fig.align='center'}
+
+# Filtro i dati del dataframe "oro" per la campionato "Serie A"
+serie_a_data <- oro[oro$campionato == "Serie A" & oro$posizione == "1st", ]
+
+# Calcolo il numero di volte che ogni squadra appare nel dataframe
+conteggio_squadre <- table(serie_a_data$squadra)
+
+# Estraggo solo le prime tre lettere dei nomi delle squadre
+squadre_abbreviate <- strtrim(names(conteggio_squadre), 3)
+
+# Definisco i colori personalizzati per le barre
+colori <- c("grey", "green", "green")
+
+# Creo il grafico barplot con barre colorate
+barplot(conteggio_squadre, 
+        main = "Vincitori per Squadra in Serie A (1956-2022)", 
+        xlab = "vittorie", 
+        ylab = "squadra",
+        horiz = TRUE,
+        names.arg = squadre_abbreviate,
+        col = colori[1:length(conteggio_squadre)],
+        xlim = c(0,10))
+
+# Aggiungo le etichette dei numeri relativi sopra ogni barra
+text(x = conteggio_squadre, 
+     y = 1:length(conteggio_squadre), 
+     labels = conteggio_squadre, 
+     pos = 4, 
+     cex = 0.9, 
+     col = "black")
+
+```
+
+Questi ultimi due grafici avrei quasi voluto ometterli (si, sono <b>interista</b>)
+
+## Si può prevedere il prossimo Pallone d'oro?
+
+Un dato non indifferente da tenere d'occhio è l'evento dei Mondiali che si sono
+svolti quest'anno
+
+Analizziamo quindi che correlazione c'è stata negli anni tra vincitore del pallone d'oro 
+e nazionale vincitrice del mondiale
+
+ANALISI SUI VINCITORI 2002-2022
+```{r  calcoli}
+
+# Calcolare la percentuale
+parte <- 12
+totale <- 20
+perchampions<- (parte / totale) * 100
+
+percmond<- (2/5) * 100
+percmond2<- (3/6) * 100
+
+perctrof<- (13/20) * 100
+
+print(paste("Tra gli ultimi 20 vincitori del premio, in 12 hanno vinto la Champions League nello stesso anno --> ", perchampions, "%" ))
+
+cat("\n")
+
+print(paste("negli ultimi 5 Mondiali disputati, invece, solo in 2 su 5 hanno vinto anche il Pallone d'Oro --> ", percmond, "%" ))
+
+cat("\n")
+
+print(paste("Se lo dovesse vincere un argentino però quest'anno, la percentuale salirebbe al ", percmond2, "%" ))
+
+cat("\n")
+
+print(paste("Inoltre è interessante come il ", perctrof, "% abbia vinto almeno 2 titoli di squadra nella stessa stagione"))
+
+
+
+gioc = 
+  pallone %>% 
+  filter(between(anno,2008,2022))%>%
+  select(anno, giocatore, gol, assist, ga, ruolo)
+
+ggplot(data = gioc, mapping = aes(x = anno, y = gol)) +
+  geom_point(mapping = aes(color = ruolo), size = 3) +  # Imposta size a un valore più grande
+  geom_smooth(se = FALSE)
+
+gol <- median(gioc$gol)
+print(paste("Mediana dei gol -->", gol))
+
+ass <- median(gioc$assist)
+print(paste("Mediana degli assist -->",ass))
+
+tot <- median(gioc$ga)
+print(paste("Mediana dei gol+assist -->", tot))
+```
+## In conclusione...
+
+Ecco una lista dei possibili candidati che ho stilato in base a tutti i dati raccolti
+
+```{r  figures7-side,fig.align='center'}
+
+print(candidati)
+
+```

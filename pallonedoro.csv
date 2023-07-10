@@ -1,0 +1,21 @@
+anno,giocatore,squadra,ruolo,campionato,mondiale,champions,gol,assist,ga
+2002,Ronaldo,Real Madrid,A,FALSE,TRUE,TRUE,,,
+2003,Pavel Nedved,Juventus,C,TRUE,NA,FALSE,,,
+2004,Andriy Shevchenko,Milan,A,TRUE,NA,FALSE,,,
+2005,Ronaldinho,Barcellona,C,TRUE,NA,FALSE,,,
+2006,Fabio Cannavaro,Real Madrid,D,FALSE,TRUE,FALSE,,,
+2007,Kakà,Milan,C,FALSE,NA,TRUE,,,
+2008,Cristiano Ronaldo,Manchester United,A,TRUE,NA,TRUE,42,8,50
+2009,Lionel Messi,Barcellona,A,TRUE,NA,TRUE,38,19,57
+2010,Lionel Messi,Barcellona,A,TRUE,FALSE,FALSE,47,12,59
+2011,Lionel Messi,Barcellona,A,TRUE,NA,TRUE,53,27,80
+2012,Lionel Messi,Barcellona,A,FALSE,NA,FALSE,73,32,105
+2013,Cristiano Ronaldo,Real Madrid,A,FALSE,NA,FALSE,55,13,68
+2014,Cristiano Ronaldo,Real Madrid,A,FALSE,FALSE,TRUE,51,17,68
+2015,Lionel Messi,Barcellona,A,TRUE,NA,TRUE,58,31,89
+2016,Cristiano Ronaldo,Real Madrid,A,FALSE,NA,TRUE,51,15,66
+2017,Cristiano Ronaldo,Real Madrid,A,TRUE,NA,TRUE,42,12,54
+2018,Luka Modric,Real Madrid,C,FALSE,FALSE,TRUE,3,7,10
+2019,Lionel Messi,Barcellona,A,TRUE,NA,FALSE,51,22,73
+2021,Lionel Messi,Paris Saint-Germain,A,TRUE,NA,FALSE,38,14,52
+2022,Karim Benzema,Real Madrid,A,TRUE,NA,TRUE,44,15,59
