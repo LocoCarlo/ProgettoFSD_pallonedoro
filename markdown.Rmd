@@ -44,7 +44,6 @@ h2{
     border-left: 5px solid #ccc;
 }
 ```
-
 ## Da cosa nasce il topic del progetto
 
 Il progetto riguardo al Pallone d'oro nasce per:
@@ -319,7 +318,7 @@ legend("topright", legend = c("Altri: Eredivise, Liga Nos, campionato URSS"),
 text(Rolegraph, ifelse(camp == "La Liga", vin-2, vin+1), paste(vin))
 
 ggplot(data = oro) +
-  geom_bar(mapping = aes(x = anno>1990, fill = campionato), position = "dodge")
+  geom_bar(mapping = aes(x = anno>1995, fill = campionato), position = "dodge")
 
 ```
 Qui abbiamo un confronto tra le nomination dei vari campionati prima e dopo degli anni '90. 
@@ -375,7 +374,7 @@ condizione <- unique(pdita$anno[pdita$posizione == "1st"])
 condnome <- oro$posizione == "1st" & oro$nazionale == "Italy"
 
 barplot(numVincitori$n, border = "black", col = ifelse(numVincitori$anno %in% condizione, "green", "white"),
-        main = "Nomination e vincitori in Serie A", las = 2,
+        main = "Nomination e vincitori italiani", las = 2,
         names.arg = numVincitori$anno,
         ylab = "nomination", xlab = "anno", space = 0.5)
 
@@ -450,8 +449,6 @@ text(x = conteggio_squadre,
      col = "black")
 
 ```
-
-Questi ultimi due grafici avrei quasi voluto ometterli (si, sono <b>interista</b>)
 
 ## Si può prevedere il prossimo Pallone d'oro?
 
